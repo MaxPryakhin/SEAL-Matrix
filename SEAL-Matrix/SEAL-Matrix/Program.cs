@@ -1,5 +1,6 @@
 ﻿using SEAL_Matrix.Core.Matrix;
 using System;
+using Microsoft.Research.SEAL;
 
 namespace SEAL_Matrix
 {
