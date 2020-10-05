@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SEAL_Matrix.Core.Matrix;
+using System;
 
 namespace SEAL_Matrix
 {
@@ -6,7 +7,16 @@ namespace SEAL_Matrix
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            var matrixStrategy = new MatrixStrategy();
+            var matrixContext = new MatrixContext(matrixStrategy);
+            var matrix = new double[] { 1.0, 0.5, 2.0, 5.0 };
+            var rowSize = 2;
+
+            Console.WriteLine("init matrix");
+            matrixContext.InitMatrix(matrix, rowSize);
+
+            Console.WriteLine("multyply by number");
+            matrixContext.MultiplyMatrixByNumber(5);
         }
     }
 }
