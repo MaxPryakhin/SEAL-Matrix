@@ -8,7 +8,7 @@ namespace SEAL_Matrix.Core.Matrix
 {
     class MatrixHomomorphicStrategy : IMatrixStrategy
     {
-        public double[] multiplyMatrixByNumber(double[] matrix, double number)
+        public double[] MultiplyMatrixByNumber(Matrix matrix, double number)
         {
             using EncryptionParameters parms = new EncryptionParameters(SchemeType.CKKS);
 
@@ -33,9 +33,10 @@ namespace SEAL_Matrix.Core.Matrix
             ulong slotCount = ckksEncoder.SlotCount;
 
             double[] podMatrix = new double[slotCount];
-            for (int i = 0; i < matrix.Length; i++)
+            var elems = matrix.Elements;
+            for (int i = 0; i < elems.Length; i++)
             {
-                podMatrix[i] = matrix[i];
+                podMatrix[i] = elems[i];
             }
 
             double scale = Math.Pow(2.0, 40);
@@ -60,6 +61,11 @@ namespace SEAL_Matrix.Core.Matrix
             ckksEncoder.Decode(plainResult, result);
 
             return result.ToArray();
+        }
+
+        public double[] SumMatrix(Matrix a, Matrix b)
+        {
+            throw new NotImplementedException();
         }
     }
 }

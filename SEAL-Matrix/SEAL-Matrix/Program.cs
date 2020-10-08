@@ -17,20 +17,26 @@ namespace SEAL_Matrix
             var matrixStrategy = new MatrixStrategy();
             var matrixContext = new MatrixContext(matrixStrategy);
             
-            Console.WriteLine("init matrix");
+            Console.WriteLine("initial matrix");
             matrixContext.Matrix = matrix;
 
-            Console.WriteLine("multyply by number");
+            Console.WriteLine("multiply by number");
             matrixContext.MultiplyMatrixByNumber(5);
+
+            Console.WriteLine("add matrix");
+            matrixContext.AddMatrix(matrix);
 
             var matrixHomomorphicStrategy = new MatrixHomomorphicStrategy();
             var matrixHomomorphicContext = new MatrixContext(matrixHomomorphicStrategy);
 
-            Console.WriteLine("init homomorphic matrix");
+            Console.WriteLine("initial homomorphic matrix");
             matrixHomomorphicContext.Matrix = matrix;
 
-            Console.WriteLine("multyply by number");
+            Console.WriteLine("multiply by number");
             matrixHomomorphicContext.MultiplyMatrixByNumber(5);
+
+
+
 
         }
     }

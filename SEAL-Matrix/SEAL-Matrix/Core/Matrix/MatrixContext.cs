@@ -16,8 +16,12 @@ namespace SEAL_Matrix.Core.Matrix
 
         public void MultiplyMatrixByNumber(double number)
         {
-            Matrix.Elements = _strategy.multiplyMatrixByNumber(Matrix.Elements, number);
+            Matrix.Elements = _strategy.MultiplyMatrixByNumber(Matrix, number);
         }
 
+        public void AddMatrix(Matrix matrix)
+        {
+            Matrix.Elements = _strategy.SumMatrix(Matrix, matrix);
+        }
     }
 }

@@ -6,6 +6,8 @@ namespace SEAL_Matrix.Core.Matrix
 {
     public interface IMatrixStrategy
     {
-        public double[] multiplyMatrixByNumber(double[] matrix, double number);
+        public double[] MultiplyMatrixByNumber(Matrix matrix, double number);
+
+        public double[] SumMatrix (Matrix a, Matrix b);
     }
 }
