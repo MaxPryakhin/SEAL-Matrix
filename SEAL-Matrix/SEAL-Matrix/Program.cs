@@ -18,6 +18,7 @@ namespace SEAL_Matrix
             var matrixContext = new MatrixContext(matrixStrategy);
             
             Console.WriteLine("initial matrix");
+            //TODO: change init
             matrixContext.Matrix = matrix;
 
             //Console.WriteLine("multiply by number");
@@ -35,7 +36,7 @@ namespace SEAL_Matrix
                 Elements = new double[] { 1.0, 0.5, 2.0, 5.0 },
                 RowSize = 2
             };
-
+            //TODO: change init
             matrixHomomorphicContext.Matrix = matrix;
 
             //Console.WriteLine("multiply by number");
