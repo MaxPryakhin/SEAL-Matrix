@@ -20,8 +20,8 @@ namespace SEAL_Matrix
             Console.WriteLine("initial matrix");
             matrixContext.Matrix = matrix;
 
-            Console.WriteLine("multiply by number");
-            matrixContext.MultiplyMatrixByNumber(5);
+            //Console.WriteLine("multiply by number");
+            //matrixContext.MultiplyMatrixByNumber(5);
 
             Console.WriteLine("add matrix");
             matrixContext.AddMatrix(matrix);
@@ -30,14 +30,19 @@ namespace SEAL_Matrix
             var matrixHomomorphicContext = new MatrixContext(matrixHomomorphicStrategy);
 
             Console.WriteLine("initial homomorphic matrix");
+            matrix = new Matrix
+            {
+                Elements = new double[] { 1.0, 0.5, 2.0, 5.0 },
+                RowSize = 2
+            };
+
             matrixHomomorphicContext.Matrix = matrix;
 
-            Console.WriteLine("multiply by number");
-            matrixHomomorphicContext.MultiplyMatrixByNumber(5);
+            //Console.WriteLine("multiply by number");
+            //matrixHomomorphicContext.MultiplyMatrixByNumber(5);
 
-
-
-
+            Console.WriteLine("add matrix");
+            matrixHomomorphicContext.AddMatrix(matrix);
         }
     }
 }
