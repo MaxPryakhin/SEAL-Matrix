@@ -7,23 +7,16 @@ namespace SEAL_Matrix.Core.Matrix
     public class MatrixContext
     {
         private IMatrixStrategy _strategy;
-        public double[] Matrix { private set; get; }
-        public int RowSize { private set; get; }
+        public Matrix Matrix { get; set; }
 
         public MatrixContext(IMatrixStrategy strategy)
         {
             _strategy = strategy ?? throw new ArgumentNullException(nameof(IMatrixStrategy));
         }
 
-        public void InitMatrix(double[] matrix, int rowSize)
-        {
-            Matrix = _strategy.initMatrix(matrix, rowSize);
-            RowSize = rowSize;
-        }
-
         public void MultiplyMatrixByNumber(double number)
         {
-            Matrix = _strategy.multiplyMatrixByNumber(Matrix, number);
+            Matrix.Elements = _strategy.multiplyMatrixByNumber(Matrix.Elements, number);
         }
 
     }

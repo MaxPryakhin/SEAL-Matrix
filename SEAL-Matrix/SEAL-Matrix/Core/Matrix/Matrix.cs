@@ -4,8 +4,9 @@ using System.Text;
 
 namespace SEAL_Matrix.Core.Matrix
 {
-    public interface IMatrixStrategy
+    public class Matrix
     {
-        public double[] multiplyMatrixByNumber(double[] matrix, double number);
+        public double[] Elements { get; set; }
+        public int RowSize { get; set; }
     }
 }

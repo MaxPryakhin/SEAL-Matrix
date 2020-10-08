@@ -8,16 +8,30 @@ namespace SEAL_Matrix
     {
         static void Main(string[] args)
         {
+            var matrix = new Matrix
+            {
+                Elements = new double[] { 1.0, 0.5, 2.0, 5.0 },
+                RowSize = 2
+            };
+
             var matrixStrategy = new MatrixStrategy();
             var matrixContext = new MatrixContext(matrixStrategy);
-            var matrix = new double[] { 1.0, 0.5, 2.0, 5.0 };
-            var rowSize = 2;
-
+            
             Console.WriteLine("init matrix");
-            matrixContext.InitMatrix(matrix, rowSize);
+            matrixContext.Matrix = matrix;
 
             Console.WriteLine("multyply by number");
             matrixContext.MultiplyMatrixByNumber(5);
+
+            var matrixHomomorphicStrategy = new MatrixHomomorphicStrategy();
+            var matrixHomomorphicContext = new MatrixContext(matrixHomomorphicStrategy);
+
+            Console.WriteLine("init homomorphic matrix");
+            matrixHomomorphicContext.Matrix = matrix;
+
+            Console.WriteLine("multyply by number");
+            matrixHomomorphicContext.MultiplyMatrixByNumber(5);
+
         }
     }
 }
