@@ -41,6 +41,10 @@ namespace SEAL_Matrix
                         matrixContext.AddMatrix(secondAddMatrix);
                         matrixHomomorphicContext.AddMatrix(secondAddMatrix);
                         break;
+                    case 3:
+                        var secondMultMatrix = InitMatrix();
+                        matrixContext.MultiplyMatrix(secondMultMatrix);
+                        break;
                 }
 
                 if (command != 5)
@@ -58,7 +62,7 @@ namespace SEAL_Matrix
             Console.WriteLine();
             Console.WriteLine("1. Multiply matrix by number");
             Console.WriteLine("2. Add matrix to matrix");
-            //Console.WriteLine("3. ");
+            Console.WriteLine("3. Multiply matrix");
             //Console.WriteLine("4. ");
             Console.WriteLine("5. Exit");
             var result = Console.ReadLine();

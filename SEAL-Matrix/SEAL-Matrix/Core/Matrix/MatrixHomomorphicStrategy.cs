@@ -8,7 +8,12 @@ namespace SEAL_Matrix.Core.Matrix
 {
     class MatrixHomomorphicStrategy : IMatrixStrategy
     {
-        public double[] MultiplyMatrixByNumber(Matrix matrix, double number)
+        public Matrix MultiplyMatrix(Matrix a, Matrix b)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Matrix MultiplyMatrixByNumber(Matrix matrix, double number)
         {
             using EncryptionParameters parms = new EncryptionParameters(SchemeType.CKKS);
 
@@ -60,10 +65,14 @@ namespace SEAL_Matrix.Core.Matrix
             var result = new List<double>();
             ckksEncoder.Decode(plainResult, result);
 
-            return result.ToArray();
+            return new Matrix()
+            {
+                Elements = result.ToArray(),
+                RowSize = matrix.RowSize
+            };
         }
 
-        public double[] SumMatrix(Matrix a, Matrix b)
+        public Matrix SumMatrix(Matrix a, Matrix b)
         {
             var length = a.Elements.Length;
             if (length != b.Elements.Length)
@@ -127,7 +136,11 @@ namespace SEAL_Matrix.Core.Matrix
             var result = new List<double>();
             ckksEncoder.Decode(plainResult, result);
 
-            return result.ToArray();
+            return new Matrix()
+            {
+                Elements = result.ToArray(),
+                RowSize = a.RowSize,
+            };
         }
     }
 }
