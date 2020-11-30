@@ -24,11 +24,11 @@ namespace SEAL_Matrix.Core.Matrix
             }
 
             var elements = new double[aColumnSize * bRowSize];
-            for (int i = 0; i < aColumnSize; i++)
+            for (var i = 0; i < aColumnSize; i++)
             {
-                for (int j = 0; j < bRowSize; j++)
+                for (var j = 0; j < bRowSize; j++)
                 {
-                    for (int k = 0; k < aRowSize; k++)
+                    for (var k = 0; k < aRowSize; k++)
                     {
                         elements[i * bRowSize + j] = 
                             elements[i * bRowSize + j] 
@@ -62,7 +62,7 @@ namespace SEAL_Matrix.Core.Matrix
             }
 
             var result = new double[length];
-            for (int i = 0; i < a.Elements.Length; i++)
+            for (var i = 0; i < a.Elements.Length; i++)
             {
                 result[i] = a.Elements[i] + b.Elements[i];
             }

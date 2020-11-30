@@ -12,6 +12,8 @@ namespace SEAL_Matrix
         static void Main(string[] args)
         {
             int command = DisplayMenu();
+            //test
+            //int command = 3;
 
             var matrixStrategy = new MatrixStrategy();
             var matrixContext = new MatrixContext(matrixStrategy);
@@ -21,6 +23,13 @@ namespace SEAL_Matrix
             while (command != 5)
             {
                 var firstMatrix = InitMatrix();
+                //test
+                //var firstMatrix = new Matrix()
+                //{
+                //    RowSize = 4,
+                //    Elements = new double[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
+                //};
+
                 var firstCopyMatrix = new Matrix()
                 {
                     Elements = (double[])firstMatrix.Elements.Clone(),
@@ -43,13 +52,20 @@ namespace SEAL_Matrix
                         break;
                     case 3:
                         var secondMultMatrix = InitMatrix();
+                        //test
+                        //var secondMultMatrix = new Matrix()
+                        //{
+                        //    Elements = new double[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 },
+                        //    RowSize = firstMatrix.RowSize
+                        //};
                         matrixContext.MultiplyMatrix(secondMultMatrix);
+                        matrixHomomorphicContext.MultiplyMatrix(secondMultMatrix);
                         break;
                 }
 
                 if (command != 5)
                 {
-                    CompareMatrix(firstMatrix, firstCopyMatrix);
+                    CompareMatrix(matrixContext.Matrix, matrixHomomorphicContext.Matrix);
                 }
 
                 command = DisplayMenu();
