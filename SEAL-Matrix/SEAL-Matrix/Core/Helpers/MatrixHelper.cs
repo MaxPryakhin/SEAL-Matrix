@@ -217,5 +217,26 @@ namespace SEAL_Matrix.Core.Helpers
             }
             return resultVec;
         }
+
+        public static Matrix.Matrix GenerateRandomMatrix(int length)
+        {
+            var elements = new double[length * length];
+            var generator = new Random();
+
+            for (var i = 0; i < length; i++)
+            {
+                for (var j = 0; j < length; j++)
+                {
+                    elements[i * length + j] = generator.NextDouble();
+                }
+            }
+
+
+            return new Matrix.Matrix()
+            {
+                RowSize = length,
+                Elements = elements
+            };
+        }
     }
 }

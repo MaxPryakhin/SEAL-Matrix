@@ -4,6 +4,7 @@ using Microsoft.Research.SEAL;
 using System.Linq;
 using System.Diagnostics;
 using System.Globalization;
+using SEAL_Matrix.Core.Helpers;
 
 namespace SEAL_Matrix
 {
@@ -11,7 +12,7 @@ namespace SEAL_Matrix
     {
         static void Main(string[] args)
         {
-            int command = DisplayMenu();
+            //int command = DisplayMenu();
             //test
             //int command = 3;
 
@@ -20,56 +21,56 @@ namespace SEAL_Matrix
             var matrixHomomorphicStrategy = new MatrixHomomorphicStrategy();
             var matrixHomomorphicContext = new MatrixContext(matrixHomomorphicStrategy);
 
-            while (command != 5)
-            {
-                var firstMatrix = InitMatrix();
-                //test
-                //var firstMatrix = new Matrix()
-                //{
-                //    RowSize = 4,
-                //    Elements = new double[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
-                //};
+            //while (command != 5)
+            //{
+            //    var firstMatrix = InitMatrix();
+            //    //test
+            //    //var firstMatrix = new Matrix()
+            //    //{
+            //    //    RowSize = 4,
+            //    //    Elements = new double[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
+            //    //};
 
-                var firstCopyMatrix = new Matrix()
-                {
-                    Elements = (double[])firstMatrix.Elements.Clone(),
-                    RowSize = firstMatrix.RowSize
-                };
+            //    var firstCopyMatrix = new Matrix()
+            //    {
+            //        Elements = (double[])firstMatrix.Elements.Clone(),
+            //        RowSize = firstMatrix.RowSize
+            //    };
 
-                matrixContext.Matrix = firstMatrix;
-                matrixHomomorphicContext.Matrix = firstCopyMatrix;
-                switch (command)
-                {
-                    case 1:
-                        var number = InitNumber();
-                        matrixContext.MultiplyMatrixByNumber(number);
-                        matrixHomomorphicContext.MultiplyMatrixByNumber(number);
-                        break;
-                    case 2:
-                        var secondAddMatrix = InitMatrix();
-                        matrixContext.AddMatrix(secondAddMatrix);
-                        matrixHomomorphicContext.AddMatrix(secondAddMatrix);
-                        break;
-                    case 3:
-                        var secondMultMatrix = InitMatrix();
-                        //test
-                        //var secondMultMatrix = new Matrix()
-                        //{
-                        //    Elements = new double[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 },
-                        //    RowSize = firstMatrix.RowSize
-                        //};
-                        matrixContext.MultiplyMatrix(secondMultMatrix);
-                        matrixHomomorphicContext.MultiplyMatrix(secondMultMatrix);
-                        break;
-                }
+            //    matrixContext.Matrix = firstMatrix;
+            //    matrixHomomorphicContext.Matrix = firstCopyMatrix;
+            //    switch (command)
+            //    {
+            //        case 1:
+            //            var number = InitNumber();
+            //            matrixContext.MultiplyMatrixByNumber(number);
+            //            matrixHomomorphicContext.MultiplyMatrixByNumber(number);
+            //            break;
+            //        case 2:
+            //            var secondAddMatrix = InitMatrix();
+            //            matrixContext.AddMatrix(secondAddMatrix);
+            //            matrixHomomorphicContext.AddMatrix(secondAddMatrix);
+            //            break;
+            //        case 3:
+            //            var secondMultMatrix = InitMatrix();
+            //            //test
+            //            //var secondMultMatrix = new Matrix()
+            //            //{
+            //            //    Elements = new double[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 },
+            //            //    RowSize = firstMatrix.RowSize
+            //            //};
+            //            matrixContext.MultiplyMatrix(secondMultMatrix);
+            //            matrixHomomorphicContext.MultiplyMatrix(secondMultMatrix);
+            //            break;
+            //    }
 
-                if (command != 5)
-                {
-                    CompareMatrix(matrixContext.Matrix, matrixHomomorphicContext.Matrix);
-                }
+            //    if (command != 5)
+            //    {
+            //        CompareMatrix(matrixContext.Matrix, matrixHomomorphicContext.Matrix);
+            //    }
 
-                command = DisplayMenu();
-            }
+            //    command = DisplayMenu();
+            //}
         }
 
         static public int DisplayMenu()
