@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Microsoft.Research.SEAL;
+using OfficeOpenXml;
+using SEAL_Matrix.Core.Enums;
 using SEAL_Matrix.Core.Helpers;
 
 namespace SEAL_Matrix.Core.Matrix
@@ -15,7 +18,7 @@ namespace SEAL_Matrix.Core.Matrix
         {
             var parms = new EncryptionParameters(SchemeType.CKKS);
 
-            const ulong polyModulusDegree = 16384;
+            const ulong polyModulusDegree = 32768;
             //Console.WriteLine($"Max bit count ${CoeffModulus.MaxBitCount(polyModulusDegree)}");
             parms.PolyModulusDegree = polyModulusDegree;
             parms.CoeffModulus = CoeffModulus.Create(
@@ -24,7 +27,7 @@ namespace SEAL_Matrix.Core.Matrix
             _parms = parms;
         }
 
-        public Matrix MultiplyMatrix(Matrix a, Matrix b)
+        public Matrix MultiplyMatrix(Matrix a, Matrix b, ExcelPackage package, int row, int column)
         {
             using SEALContext context = new SEALContext(_parms);
             using CKKSEncoder ckksEncoder = new CKKSEncoder(context);
@@ -38,10 +41,10 @@ namespace SEAL_Matrix.Core.Matrix
                 throw new ArgumentException("Length is not equal");
             }
 
-            Console.WriteLine("Matrix 1");
-            ConsoleMatrixHelper.PrintMatrix(a);
-            Console.WriteLine("Matrix 2");
-            ConsoleMatrixHelper.PrintMatrix(b);
+            //Console.WriteLine("Matrix 1");
+            //ConsoleMatrixHelper.PrintMatrix(a);
+            //Console.WriteLine("Matrix 2");
+            //ConsoleMatrixHelper.PrintMatrix(b);
 
 
             using var keygen = new KeyGenerator(context);
@@ -94,8 +97,8 @@ namespace SEAL_Matrix.Core.Matrix
             }
 
             var uSigma = MatrixHelper.GetUSigma(podMatrix1);
-            Console.WriteLine("u sigma");
-            ConsoleMatrixHelper.PrintMatrix(uSigma);
+            //Console.WriteLine("u sigma");
+            //ConsoleMatrixHelper.PrintMatrix(uSigma);
 
             for (var r = 0; r < rowCount2; r++)
             {
@@ -108,8 +111,8 @@ namespace SEAL_Matrix.Core.Matrix
             }
 
             var uTau = MatrixHelper.GetUTau(podMatrix2);
-            Console.WriteLine("u tau");
-            ConsoleMatrixHelper.PrintMatrix(uTau);
+            //Console.WriteLine("u tau");
+            //ConsoleMatrixHelper.PrintMatrix(uTau);
 
             var vK = new List<double[,]>(length - 1);
 
@@ -118,11 +121,11 @@ namespace SEAL_Matrix.Core.Matrix
                 vK.Add(MatrixHelper.GetVk(podMatrix1, i));
             }
 
-            for (var i = 0; i < vK.Count; i++)
-            {
-                Console.WriteLine($"V {i + 1}");
-                ConsoleMatrixHelper.PrintMatrix(vK[i]);
-            }
+            //for (var i = 0; i < vK.Count; i++)
+            //{
+            //    Console.WriteLine($"V {i + 1}");
+            //    ConsoleMatrixHelper.PrintMatrix(vK[i]);
+            //}
 
             var wK = new List<double[,]>(length - 1);
 
@@ -131,22 +134,22 @@ namespace SEAL_Matrix.Core.Matrix
                 wK.Add(MatrixHelper.GetWk(podMatrix1, i));
             }
 
-            for (var i = 0; i < wK.Count; i++)
-            {
-                Console.WriteLine($"W {i + 1}");
-                ConsoleMatrixHelper.PrintMatrix(wK[i]);
-            }
+            //for (var i = 0; i < wK.Count; i++)
+            //{
+            //    Console.WriteLine($"W {i + 1}");
+            //    ConsoleMatrixHelper.PrintMatrix(wK[i]);
+            //}
 
             var uSigmaDiagonals = MatrixHelper.GetAllDiagonals(uSigma);
             var uTauDiagonals = MatrixHelper.GetAllDiagonals(uTau);
             var epsilon = Math.Pow(10, -8);
 
 
-            Console.WriteLine("uSigmaDiagonals");
-            ConsoleMatrixHelper.PrintMatrix(uSigmaDiagonals);
+            //Console.WriteLine("uSigmaDiagonals");
+            //ConsoleMatrixHelper.PrintMatrix(uSigmaDiagonals);
 
-            Console.WriteLine("uTauDiagonals");
-            ConsoleMatrixHelper.PrintMatrix(uTauDiagonals);
+            //Console.WriteLine("uTauDiagonals");
+            //ConsoleMatrixHelper.PrintMatrix(uTauDiagonals);
 
             for (var i = 0; i < square; i++)
             {
@@ -155,16 +158,6 @@ namespace SEAL_Matrix.Core.Matrix
                     uSigmaDiagonals[i][j] += epsilon;
                     uTauDiagonals[i][j] += epsilon;
                 }
-            }
-
-            var uSigmaDiagonalsPlain = new Plaintext[square];
-            var uTauDiagonalsPlain = new Plaintext[square];
-            for (var i = 0; i < square; i++)
-            {
-                uSigmaDiagonalsPlain[i] = new Plaintext();
-                ckksEncoder.Encode(uSigmaDiagonals[i], scale, uSigmaDiagonalsPlain[i]);
-                uTauDiagonalsPlain[i] = new Plaintext();
-                ckksEncoder.Encode(uTauDiagonals[i], scale, uTauDiagonalsPlain[i]);
             }
 
             var vkDiagonals = new List<List<double[]>>(length - 1);
@@ -187,6 +180,18 @@ namespace SEAL_Matrix.Core.Matrix
                         wkDiagonals[i][j][k] += epsilon;
                     }
                 }
+            }
+
+            var stopwatch = new Stopwatch();
+
+            var uSigmaDiagonalsPlain = new Plaintext[square];
+            var uTauDiagonalsPlain = new Plaintext[square];
+            for (var i = 0; i < square; i++)
+            {
+                uSigmaDiagonalsPlain[i] = new Plaintext();
+                ckksEncoder.Encode(uSigmaDiagonals[i], scale, uSigmaDiagonalsPlain[i]);
+                uTauDiagonalsPlain[i] = new Plaintext();
+                ckksEncoder.Encode(uTauDiagonals[i], scale, uTauDiagonalsPlain[i]);
             }
 
             var vkdIagonalsPlain = new List<Plaintext[]>(length - 1);
@@ -234,8 +239,36 @@ namespace SEAL_Matrix.Core.Matrix
                 encryptor.Encrypt(plainMatrix2[r], encryptedMatrix2[r]);
             }
 
+            var bytesBefore = GC.GetTotalMemory(false);
             using Ciphertext encodeMatrix1 = EncodeMatrix(encryptedMatrix1, galKeys, evaluator);
+            var bytesAfter = GC.GetTotalMemory(false);
             using Ciphertext encodeMatrix2 = EncodeMatrix(encryptedMatrix2, galKeys, evaluator);
+
+            stopwatch.Stop();
+
+            var sheet = package.Workbook.Worksheets[(int)TableEnum.MulEncryptingTime];
+            sheet.Cells[row, column].Value = stopwatch.ElapsedMilliseconds;
+
+            sheet = package.Workbook.Worksheets[(int)TableEnum.MulEncryptingRam];
+            var bytes = bytesAfter - bytesBefore;
+            sheet.Cells[row, column].Value = bytes;
+
+            stopwatch.Reset();
+            stopwatch.Start();
+
+            foreach (var ciphertext in encryptedMatrix1)
+            {
+                var testPlain = new Plaintext();
+                decryptor.Decrypt(ciphertext, testPlain);
+                ckksEncoder.Decode(testPlain, new List<double>());
+            }
+
+            stopwatch.Stop();
+            sheet = package.Workbook.Worksheets[(int)TableEnum.MulDecryptingTime];
+            sheet.Cells[row, column].Value = stopwatch.ElapsedMilliseconds;
+
+            stopwatch.Reset();
+            stopwatch.Start();
 
             // Step 1-1
             ctAResult[0] = LinearTransformPlain(encodeMatrix1, uSigmaDiagonalsPlain, galKeys);
@@ -246,25 +279,25 @@ namespace SEAL_Matrix.Core.Matrix
             // Step 2
             for (var k = 1; k < length; k++)
             {
-                Console.WriteLine($"step 2 k = {k}");
-                Console.WriteLine("matrix A[0]");
-                TestDecryptMatrix(ctAResult[0], length, decryptor, ckksEncoder);
-                Console.WriteLine("matrix B[0]");
-                TestDecryptMatrix(ctBResult[0], length, decryptor, ckksEncoder);
-                Console.WriteLine("matrix VK");
-                ConsoleMatrixHelper.PrintMatrix(vkDiagonals[k - 1], length);
-                Console.WriteLine("matrix WK");
-                ConsoleMatrixHelper.PrintMatrix(wkDiagonals[k - 1], length);
+                //Console.WriteLine($"step 2 k = {k}");
+                //Console.WriteLine("matrix A[0]");
+                //TestDecryptMatrix(ctAResult[0], length, decryptor, ckksEncoder);
+                //Console.WriteLine("matrix B[0]");
+                //TestDecryptMatrix(ctBResult[0], length, decryptor, ckksEncoder);
+                //Console.WriteLine("matrix VK");
+                //ConsoleMatrixHelper.PrintMatrix(vkDiagonals[k - 1], length);
+                //Console.WriteLine("matrix WK");
+                //ConsoleMatrixHelper.PrintMatrix(wkDiagonals[k - 1], length);
 
                 ctAResult[k] = LinearTransformPlain(ctAResult[0], vkdIagonalsPlain[k - 1], galKeys);
                 ctBResult[k] = LinearTransformPlain(ctBResult[0], wkdIagonalsPlain[k - 1], galKeys);
             }
 
-            Console.WriteLine("step 1 and step 2 Linear");
-            Console.WriteLine("matrix A");
-            TestDecryptMatrix(ctAResult, length, decryptor, ckksEncoder);
-            Console.WriteLine("matrix B");
-            TestDecryptMatrix(ctBResult, length, decryptor, ckksEncoder);
+            //Console.WriteLine("step 1 and step 2 Linear");
+            //Console.WriteLine("matrix A");
+            //TestDecryptMatrix(ctAResult, length, decryptor, ckksEncoder);
+            //Console.WriteLine("matrix B");
+            //TestDecryptMatrix(ctBResult, length, decryptor, ckksEncoder);
 
 
             // Step 3
@@ -274,62 +307,66 @@ namespace SEAL_Matrix.Core.Matrix
                 evaluator.RescaleToNextInplace(ctBResult[i]);
             }
 
-            Console.WriteLine("rescale result");
-            Console.WriteLine("matrix A res");
-            TestDecryptMatrix(ctAResult, length, decryptor, ckksEncoder);
-            Console.WriteLine("matrix B res");
-            TestDecryptMatrix(ctBResult, length, decryptor, ckksEncoder);
-
+            //Console.WriteLine("rescale result");
+            //Console.WriteLine("matrix A res");
+            //TestDecryptMatrix(ctAResult, length, decryptor, ckksEncoder);
+            //Console.WriteLine("matrix B res");
+            //TestDecryptMatrix(ctBResult, length, decryptor, ckksEncoder);
+            bytesBefore = GC.GetTotalMemory(false);
             var ctAB = new Ciphertext();
             evaluator.Multiply(ctAResult[0], ctBResult[0], ctAB);
 
-            Console.WriteLine();
-            Console.WriteLine("rescale result");
-            Console.WriteLine("matrix AB[0]");
-            TestDecryptMatrix(ctAB, square, decryptor, ckksEncoder);
+            //Console.WriteLine();
+            //Console.WriteLine("rescale result");
+            //Console.WriteLine("matrix AB[0]");
+            //TestDecryptMatrix(ctAB, square, decryptor, ckksEncoder);
 
             evaluator.ModSwitchToNextInplace(ctAB);
 
-            Console.WriteLine();
-            Console.WriteLine("mod switch result");
-            Console.WriteLine("matrix A res");
-            TestDecryptMatrix(ctAResult, length, decryptor, ckksEncoder);
-            Console.WriteLine("matrix B res");
-            TestDecryptMatrix(ctBResult, length, decryptor, ckksEncoder);
+            //Console.WriteLine();
+            //Console.WriteLine("mod switch result");
+            //Console.WriteLine("matrix A res");
+            //TestDecryptMatrix(ctAResult, length, decryptor, ckksEncoder);
+            //Console.WriteLine("matrix B res");
+            //TestDecryptMatrix(ctBResult, length, decryptor, ckksEncoder);
 
-            for (int i = 1; i < length; i++)
+            for (var i = 1; i < length; i++)
             {
                 ctAResult[i].Scale = Math.Pow(2, (int)Math.Log2(ctAResult[i].Scale));
                 ctBResult[i].Scale = Math.Pow(2, (int)Math.Log2(ctBResult[i].Scale));
             }
 
-            for (int k = 1; k < length; k++)
+            for (var k = 1; k < length; k++)
             {
-                Ciphertext temp_mul = new Ciphertext(context);
-                evaluator.Multiply(ctAResult[k], ctBResult[k], temp_mul);
+                var tempMul = new Ciphertext(context);
+                evaluator.Multiply(ctAResult[k], ctBResult[k], tempMul);
 
-                Console.WriteLine();
-                Console.WriteLine("result temp mul");
-                Console.WriteLine($"temp mul {k}");
-                TestDecryptMatrix(ctAB, square, decryptor, ckksEncoder);
+                //Console.WriteLine();
+                //Console.WriteLine("result temp mul");
+                //Console.WriteLine($"temp mul {k}");
+                //TestDecryptMatrix(ctAB, square, decryptor, ckksEncoder);
 
-                evaluator.AddInplace(ctAB, temp_mul);
+                evaluator.AddInplace(ctAB, tempMul);
 
-                Console.WriteLine();
-                Console.WriteLine($"add inplace matrix AB[{k}]");
-                TestDecryptMatrix(ctAB, square, decryptor, ckksEncoder);
+                //Console.WriteLine();
+                //Console.WriteLine($"add inplace matrix AB[{k}]");
+                //TestDecryptMatrix(ctAB, square, decryptor, ckksEncoder);
             }
 
-            Console.WriteLine("step 3 result");
-            Console.WriteLine("matrix A");
-            TestDecryptMatrix(ctAResult, length, decryptor, ckksEncoder);
-            Console.WriteLine("matrix B");
-            TestDecryptMatrix(ctBResult, length, decryptor, ckksEncoder);
-
+            //Console.WriteLine("step 3 result");
+            //Console.WriteLine("matrix A");
+            //TestDecryptMatrix(ctAResult, length, decryptor, ckksEncoder);
+            //Console.WriteLine("matrix B");
+            //TestDecryptMatrix(ctBResult, length, decryptor, ckksEncoder);
+            bytesAfter = GC.GetTotalMemory(false);
             using Plaintext plainResult = new Plaintext();
             decryptor.Decrypt(ctAB, plainResult);
             var result = new List<double>();
             ckksEncoder.Decode(plainResult, result);
+
+            stopwatch.Stop();
+            sheet = package.Workbook.Worksheets[(int) TableEnum.MulEncryptOperationTime];
+            sheet.Cells[row, column].Value = stopwatch.ElapsedMilliseconds;
 
             var resultMatrix = new Matrix()
             {
@@ -337,8 +374,12 @@ namespace SEAL_Matrix.Core.Matrix
                 RowSize = a.RowSize,
             };
 
-            Console.WriteLine("result");
-            ConsoleMatrixHelper.PrintMatrix(resultMatrix, rowSize);
+            sheet = package.Workbook.Worksheets[(int) TableEnum.MulEncryptResultRam];
+            bytes = bytesAfter - bytesBefore;
+            sheet.Cells[row, column].Value = bytes;
+
+            //Console.WriteLine("result");
+            //ConsoleMatrixHelper.PrintMatrix(resultMatrix, rowSize);
 
             return resultMatrix;
         }
@@ -419,8 +460,11 @@ namespace SEAL_Matrix.Core.Matrix
 
             return ctPrime;
         }
-        public Matrix MultiplyMatrixByNumber(Matrix matrix, double number)
+        public Matrix MultiplyMatrixByNumber(Matrix matrix, double number, ExcelPackage package, int row, int column)
         {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+
             using var context = new SEALContext(_parms);
 
             using var keygen = new KeyGenerator(context);
@@ -455,23 +499,34 @@ namespace SEAL_Matrix.Core.Matrix
             var multiplyBy = number;
             ckksEncoder.Encode(multiplyBy, scale, plainCoeff);
 
+            var bytesBefore = GC.GetTotalMemory(false);
             using var multiplyByNumber = new Ciphertext();
             evaluator.MultiplyPlain(encryptedMatrix, plainCoeff, multiplyByNumber);
             evaluator.RelinearizeInplace(multiplyByNumber, relinKeys);
+            var bytesAfter = GC.GetTotalMemory(false);
 
             using var plainResult = new Plaintext();
             decryptor.Decrypt(multiplyByNumber, plainResult);
             var result = new List<double>();
             ckksEncoder.Decode(plainResult, result);
 
-            return new Matrix()
+            var resultMatrix = new Matrix()
             {
                 Elements = result.ToArray(),
                 RowSize = matrix.RowSize
             };
+
+            stopwatch.Stop();
+            var sheet = package.Workbook.Worksheets[(int)TableEnum.MulByNumberEncryptOperationTime];
+            sheet.Cells[row, column].Value = stopwatch.ElapsedMilliseconds;
+            sheet = package.Workbook.Worksheets[(int)TableEnum.MulByNumberEncryptResultRam];
+            var bytes = bytesAfter - bytesBefore;
+            sheet.Cells[row, column].Value = bytes;
+
+            return resultMatrix;
         }
 
-        public Matrix SumMatrix(Matrix a, Matrix b)
+        public Matrix SumMatrix(Matrix a, Matrix b, ExcelPackage package, int row, int column)
         {
             var length = a.Elements.Length;
             if (length != b.Elements.Length)
@@ -506,6 +561,9 @@ namespace SEAL_Matrix.Core.Matrix
 
             double scale = Math.Pow(2.0, 40);
 
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+
             using Plaintext plainMatrix1 = new Plaintext(),
                             plainMatrix2 = new Plaintext();
             //TODO: refactor
@@ -515,12 +573,37 @@ namespace SEAL_Matrix.Core.Matrix
             evaluator.RelinearizeInplace(encryptedMatrix1, relinKeys);
 
             ckksEncoder.Encode(podMatrix2, scale, plainMatrix2);
+            var bytesBefore = GC.GetTotalMemory(false);
             using var encryptedMatrix2 = new Ciphertext();
             encryptor.Encrypt(plainMatrix2, encryptedMatrix2);
+            var bytesAfter = GC.GetTotalMemory(false);
             evaluator.RelinearizeInplace(encryptedMatrix2, relinKeys);
 
+            stopwatch.Stop();
+            var sheet = package.Workbook.Worksheets[(int)TableEnum.SumEncryptingTime];
+            sheet.Cells[row, column].Value = stopwatch.ElapsedMilliseconds;
+            sheet = package.Workbook.Worksheets[(int)TableEnum.SumEncryptingRam];
+            var bytes = bytesAfter - bytesBefore;
+            sheet.Cells[row, column].Value = bytes;
+
+            stopwatch.Reset();
+            stopwatch.Start();
+
+            var testPlain = new Plaintext();
+            decryptor.Decrypt(encryptedMatrix2, testPlain);
+            ckksEncoder.Decode(testPlain, new List<double>());
+
+            stopwatch.Stop();
+            sheet = package.Workbook.Worksheets[(int)TableEnum.SumDecryptingTime];
+            sheet.Cells[row, column].Value = stopwatch.ElapsedMilliseconds;
+
+            stopwatch.Reset();
+            stopwatch.Start();
+
+            bytesBefore = GC.GetTotalMemory(false);
             using var sumOfMatrix = new Ciphertext();
             evaluator.Add(encryptedMatrix1, encryptedMatrix2, sumOfMatrix);
+            bytesAfter = GC.GetTotalMemory(false);
             evaluator.RelinearizeInplace(sumOfMatrix, relinKeys);
 
             using var plainResult = new Plaintext();
@@ -528,11 +611,20 @@ namespace SEAL_Matrix.Core.Matrix
             var result = new List<double>();
             ckksEncoder.Decode(plainResult, result);
 
-            return new Matrix()
+            var resultMatrix = new Matrix()
             {
                 Elements = result.ToArray(),
-                RowSize = a.RowSize,
+                RowSize = a.RowSize
             };
+
+            stopwatch.Stop();
+            sheet = package.Workbook.Worksheets[(int)TableEnum.SumEncryptOperationTime];
+            sheet.Cells[row, column].Value = stopwatch.ElapsedMilliseconds;
+            sheet = package.Workbook.Worksheets[(int)TableEnum.SumEncryptResultRam];
+            bytes = bytesAfter - bytesBefore;
+            sheet.Cells[row, column].Value = bytes;
+
+            return resultMatrix;
         }
     }
 }

@@ -218,23 +218,23 @@ namespace SEAL_Matrix.Core.Helpers
             return resultVec;
         }
 
-        public static Matrix.Matrix GenerateRandomMatrix(int length)
+        public static Matrix.Matrix GenerateRandomMatrix(int size)
         {
-            var elements = new double[length * length];
+            var elements = new double[size * size];
             var generator = new Random();
 
-            for (var i = 0; i < length; i++)
+            for (var i = 0; i < size; i++)
             {
-                for (var j = 0; j < length; j++)
+                for (var j = 0; j < size; j++)
                 {
-                    elements[i * length + j] = generator.NextDouble();
+                    elements[i * size + j] = generator.NextDouble();
                 }
             }
 
 
             return new Matrix.Matrix()
             {
-                RowSize = length,
+                RowSize = size,
                 Elements = elements
             };
         }

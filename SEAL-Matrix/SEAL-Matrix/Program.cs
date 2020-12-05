@@ -1,9 +1,13 @@
 ﻿using SEAL_Matrix.Core.Matrix;
 using System;
+using System.Data;
 using Microsoft.Research.SEAL;
 using System.Linq;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
+using OfficeOpenXml;
+using SEAL_Matrix.Core.Enums;
 using SEAL_Matrix.Core.Helpers;
 
 namespace SEAL_Matrix
@@ -20,6 +24,101 @@ namespace SEAL_Matrix
             var matrixContext = new MatrixContext(matrixStrategy);
             var matrixHomomorphicStrategy = new MatrixHomomorphicStrategy();
             var matrixHomomorphicContext = new MatrixContext(matrixHomomorphicStrategy);
+
+            var isExists = File.Exists("test.xslx");
+            using var fs = File.Open("test.xslx", FileMode.OpenOrCreate);
+
+            var package = new ExcelPackage();
+            if (!isExists)
+            {
+                package.Workbook.Worksheets.Add("0.Параметры криптосистемы");
+
+                package.Workbook.Worksheets.Add("1. Объем ОЗУ для хранения матриц");
+                package.Workbook.Worksheets.Add("1.1.Время шифрования матриц (сумма)");
+                package.Workbook.Worksheets.Add("1.1.Объем ОЗУ для хранения зашифрованных  матриц (сумма)");
+                package.Workbook.Worksheets.Add("1.1.Время дешифрования матриц (сумма)");
+                package.Workbook.Worksheets.Add("1.2.Время шифрования матриц (умножение)");
+                package.Workbook.Worksheets.Add("1.2.Объем ОЗУ для хранения зашифрованных  матриц (умножение)");
+                package.Workbook.Worksheets.Add("1.3.Время дешифрования матриц (умножение)");
+
+                package.Workbook.Worksheets.Add("2.Время сложения матриц");
+                package.Workbook.Worksheets.Add("2.Объем ОЗУ для хранения матрицы сложения");
+                package.Workbook.Worksheets.Add("2.Время сложения зашифрованных матриц");
+                package.Workbook.Worksheets.Add("2.Объем ОЗУ для хранения зашифрованной матрицы сложения");
+                package.Workbook.Worksheets.Add("2.Ошибка результата");
+
+                package.Workbook.Worksheets.Add("3.Время умножения матрицы на число");
+                package.Workbook.Worksheets.Add("3.Объем ОЗУ для хранения матрицы, умноженной на число");
+                package.Workbook.Worksheets.Add("3.Время умноженния зашифрованной матрицы на число");
+                package.Workbook.Worksheets.Add("3.Объем ОЗУ для хранения зашифрованной матрицы, умноженной на число");
+                package.Workbook.Worksheets.Add("3.Ошибка результата");
+
+                package.Workbook.Worksheets.Add("4.Время умножения матриц");
+                package.Workbook.Worksheets.Add("4.Объем ОЗУ для хранения матрицы умножения");
+                package.Workbook.Worksheets.Add("4.Время умножения зашифрованных матриц");
+                package.Workbook.Worksheets.Add("4.Объем ОЗУ для хранения зашифрованной матрицы умножения");
+                package.Workbook.Worksheets.Add("4.Ошибка результата");
+
+                foreach (var workSheet in package.Workbook.Worksheets)
+                {
+                    workSheet.Cells[1, 1].Value = "c_id";
+                    workSheet.Cells[1, 2].Value = "100x100";
+                    //workSheet.Cells[1, 3].Value = "200x200";
+                }
+            }
+
+
+
+            var startRow = 1;
+            var cells = package.Workbook.Worksheets[0].Cells;
+            int row = 1;
+
+            for (var i = 1; i < cells.Rows ; i++)
+            {
+                var cell = cells[startRow + i, 1];
+                if (cell.Value != null) continue;
+                row = startRow + i;
+                break;
+            }
+            
+            var random = new Random();
+
+            for (var i = 1; i < 2; i++)
+            {
+                var size = 100 * i;
+                var column = 1 + i;
+                var bytesBefore = GC.GetTotalMemory(false);
+                var firstMatrix = MatrixHelper.GenerateRandomMatrix(size);
+                var bytesAfter = GC.GetTotalMemory(false);
+                var secondMatrix = MatrixHelper.GenerateRandomMatrix(size);
+
+                var sheet = package.Workbook.Worksheets[(int)TableEnum.Ram];
+                var bytes = bytesAfter - bytesBefore;
+                sheet.Cells[row, column].Value = bytes;
+
+
+                var clearResult = matrixContext.AddMatrix(firstMatrix, secondMatrix, package, row, column);
+                var decryptedResult = matrixHomomorphicContext.AddMatrix(firstMatrix, secondMatrix, package, row, column);
+                var maxError = FindMaxAbsoluteError(clearResult, decryptedResult);
+                sheet = package.Workbook.Worksheets[(int)TableEnum.SumResultError];
+                sheet.Cells[row, column].Value = maxError;
+
+                clearResult = matrixContext.MultiplyMatrix(firstMatrix, secondMatrix, package, row, column);
+                decryptedResult = matrixHomomorphicContext.MultiplyMatrix(firstMatrix, secondMatrix, package, row, column);
+                maxError = FindMaxAbsoluteError(clearResult, decryptedResult);
+                sheet = package.Workbook.Worksheets[(int)TableEnum.SumResultError];
+                sheet.Cells[row, column].Value = maxError;
+
+                var number = random.NextDouble();
+                clearResult = matrixContext.MultiplyMatrixByNumber(firstMatrix, number, package, row, column);
+                decryptedResult = matrixHomomorphicContext.MultiplyMatrixByNumber(firstMatrix, number, package, row, column);
+                maxError = FindMaxAbsoluteError(clearResult, decryptedResult);
+                sheet = package.Workbook.Worksheets[(int)TableEnum.SumResultError];
+                sheet.Cells[row, column].Value = maxError;
+            }
+
+            package.SaveAs(fs);
+
 
             //while (command != 5)
             //{
@@ -71,6 +170,31 @@ namespace SEAL_Matrix
 
             //    command = DisplayMenu();
             //}
+        }
+
+        private static double FindMaxAbsoluteError(Matrix clearResult, Matrix decryptedResult)
+        {
+            double maxError = 0;
+            for (int i = 0; i < clearResult.Elements.LongLength; i++)
+            {
+                var clear = clearResult.Elements[i];
+                var decrypted = decryptedResult.Elements[i];
+
+                var error = Math.Abs(decrypted - clear);
+
+                if (error > maxError)
+                {
+                    maxError = error;
+                }
+            }
+
+            return maxError;
+        }
+
+        static void InitTable(ExcelWorksheet worksheet)
+        {
+            worksheet.Cells[0, 0].Value = "id_c";
+
         }
 
         static public int DisplayMenu()

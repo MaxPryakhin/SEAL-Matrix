@@ -4,6 +4,7 @@ using System.Text;
 
 namespace SEAL_Matrix.Core.Matrix
 {
+    [Serializable]
     public class Matrix
     {
         public double[] Elements { get; set; }
