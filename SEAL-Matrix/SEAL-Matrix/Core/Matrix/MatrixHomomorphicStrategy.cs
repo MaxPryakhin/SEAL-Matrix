@@ -18,7 +18,7 @@ namespace SEAL_Matrix.Core.Matrix
         {
             var parms = new EncryptionParameters(SchemeType.CKKS);
 
-            const ulong polyModulusDegree = 32768;
+            const ulong polyModulusDegree = 16384;
             //Console.WriteLine($"Max bit count ${CoeffModulus.MaxBitCount(polyModulusDegree)}");
             parms.PolyModulusDegree = polyModulusDegree;
             parms.CoeffModulus = CoeffModulus.Create(
@@ -479,36 +479,60 @@ namespace SEAL_Matrix.Core.Matrix
             using var ckksEncoder = new CKKSEncoder(context);
 
             var slotCount = ckksEncoder.SlotCount;
+            var cypherCount = (ulong)matrix.Elements.Length / slotCount + 1;
+            var square = (ulong)(matrix.RowSize * matrix.RowSize);
 
-            var podMatrix = new double[slotCount];
+            var podMatrix = new List<double[]>((int)cypherCount);
             var elems = matrix.Elements;
-            for (var i = 0; i < elems.Length; i++)
+            for (ulong j = 0; j < cypherCount; j++)
             {
-                podMatrix[i] = elems[i];
+                podMatrix.Add(new double[slotCount]);
+                for (ulong i = 0;
+                    i < slotCount && i + j * slotCount < square;
+                    i++)
+                {
+                    podMatrix[(int)j][i] = elems[i + j * slotCount];
+                }
             }
 
             var scale = Math.Pow(2.0, 10);
 
-            using Plaintext plainMatrix = new Plaintext(),
-                            plainCoeff = new Plaintext();
-            ckksEncoder.Encode(podMatrix, scale, plainMatrix);
-            using var encryptedMatrix = new Ciphertext();
-            encryptor.Encrypt(plainMatrix, encryptedMatrix);
-            evaluator.RelinearizeInplace(encryptedMatrix, relinKeys);
+            var plainMatrix = new Plaintext[cypherCount];
+            var plainCoeff = new Plaintext();
+            var encryptedMatrix = new Ciphertext[cypherCount];
+            for (int j = 0; j < (int)cypherCount; j++)
+            {
+                plainMatrix[j] = new Plaintext();
+                ckksEncoder.Encode(podMatrix[j], scale, plainMatrix[j]);
+                encryptedMatrix[j] = new Ciphertext();
+                encryptor.Encrypt(plainMatrix[j], encryptedMatrix[j]);
+            }
+            //evaluator.RelinearizeInplace(encryptedMatrix, relinKeys);
             
             var multiplyBy = number;
             ckksEncoder.Encode(multiplyBy, scale, plainCoeff);
 
             var bytesBefore = GC.GetTotalMemory(false);
-            using var multiplyByNumber = new Ciphertext();
-            evaluator.MultiplyPlain(encryptedMatrix, plainCoeff, multiplyByNumber);
-            evaluator.RelinearizeInplace(multiplyByNumber, relinKeys);
+            var multiplyByNumber = new Ciphertext[cypherCount];
+            for (int j = 0; j < (int)cypherCount; j++)
+            {
+                multiplyByNumber[j] = new Ciphertext();
+                evaluator.MultiplyPlain(encryptedMatrix[j], plainCoeff, multiplyByNumber[j]);
+            }
+            //evaluator.RelinearizeInplace(multiplyByNumber, relinKeys);
             var bytesAfter = GC.GetTotalMemory(false);
 
-            using var plainResult = new Plaintext();
-            decryptor.Decrypt(multiplyByNumber, plainResult);
+            var plainResult = new Plaintext[cypherCount];
             var result = new List<double>();
-            ckksEncoder.Decode(plainResult, result);
+
+            for (int j = 0; (ulong)j < cypherCount; j++)
+            {
+                plainResult[j] = new Plaintext();
+                decryptor.Decrypt(multiplyByNumber[j], plainResult[j]);
+                var temp = new List<double>();
+                ckksEncoder.Decode(plainResult[j], temp);
+                result.AddRange(temp);
+            }
 
             var resultMatrix = new Matrix()
             {
@@ -549,14 +573,25 @@ namespace SEAL_Matrix.Core.Matrix
 
             var slotCount = ckksEncoder.SlotCount;
 
-            var podMatrix1 = new double[slotCount];
-            var podMatrix2 = new double[slotCount];
+            var cypherCount = (ulong) a.Elements.Length / slotCount + 1;
+
+            var podMatrix1 = new List<double[]>((int)cypherCount);
+            var podMatrix2 = new List<double[]>((int)cypherCount);
             var elems1 = a.Elements;
             var elems2 = b.Elements;
-            for (var i = 0; i < elems1.Length; i++)
+            var square = (ulong)(a.RowSize * a.RowSize);
+
+            for (ulong j = 0; j < cypherCount; j++)
             {
-                podMatrix1[i] = elems1[i];
-                podMatrix2[i] = elems2[i];
+                podMatrix1.Add(new double[slotCount]);
+                podMatrix2.Add(new double[slotCount]);
+                for (ulong i = 0; 
+                    i < slotCount && i + j * slotCount < square;
+                    i++)
+                {
+                    podMatrix1[(int)j][i] = elems1[i + j * slotCount];
+                    podMatrix2[(int)j][i] = elems2[i + j * slotCount];
+                }
             }
 
             double scale = Math.Pow(2.0, 40);
@@ -564,21 +599,35 @@ namespace SEAL_Matrix.Core.Matrix
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            using Plaintext plainMatrix1 = new Plaintext(),
-                            plainMatrix2 = new Plaintext();
+            Plaintext[] plainMatrix1 = new Plaintext[cypherCount],
+                            plainMatrix2 = new Plaintext[cypherCount];
+
+            Ciphertext[] encryptedMatrix1 = new Ciphertext[cypherCount],
+                            encryptedMatrix2 = new Ciphertext[cypherCount];
             //TODO: refactor
-            ckksEncoder.Encode(podMatrix1, scale, plainMatrix1);
-            using var encryptedMatrix1 = new Ciphertext();
-            encryptor.Encrypt(plainMatrix1, encryptedMatrix1);
-            evaluator.RelinearizeInplace(encryptedMatrix1, relinKeys);
 
-            ckksEncoder.Encode(podMatrix2, scale, plainMatrix2);
-            var bytesBefore = GC.GetTotalMemory(false);
-            using var encryptedMatrix2 = new Ciphertext();
-            encryptor.Encrypt(plainMatrix2, encryptedMatrix2);
-            var bytesAfter = GC.GetTotalMemory(false);
-            evaluator.RelinearizeInplace(encryptedMatrix2, relinKeys);
+            for (int j = 0; (ulong)j < cypherCount; j++)
+            {
+                plainMatrix1[j] = new Plaintext();
+                ckksEncoder.Encode(podMatrix1[j], scale, plainMatrix1[j]);
+                encryptedMatrix1[j] = new Ciphertext();
+                encryptor.Encrypt(plainMatrix1[j], encryptedMatrix1[j]);
+                //evaluator.RelinearizeInplace(encryptedMatrix1[j], relinKeys);
+            }
 
+            long bytesBefore = 0, bytesAfter = 0;
+            bytesBefore = GC.GetTotalMemory(false);
+            for (int j = 0; (ulong)j < cypherCount; j++)
+            {
+                plainMatrix2[j] = new Plaintext();
+                ckksEncoder.Encode(podMatrix2[j], scale, plainMatrix2[j]);
+                encryptedMatrix2[j] = new Ciphertext();
+                encryptor.Encrypt(plainMatrix2[j], encryptedMatrix2[j]);
+                
+                //evaluator.RelinearizeInplace(encryptedMatrix2[j], relinKeys);
+            }
+
+            bytesAfter = GC.GetTotalMemory(false);
             stopwatch.Stop();
             var sheet = package.Workbook.Worksheets[(int)TableEnum.SumEncryptingTime];
             sheet.Cells[row, column].Value = stopwatch.ElapsedMilliseconds;
@@ -589,9 +638,12 @@ namespace SEAL_Matrix.Core.Matrix
             stopwatch.Reset();
             stopwatch.Start();
 
-            var testPlain = new Plaintext();
-            decryptor.Decrypt(encryptedMatrix2, testPlain);
-            ckksEncoder.Decode(testPlain, new List<double>());
+            for (int j = 0; (ulong) j < cypherCount; j++)
+            {
+                var testPlain = new Plaintext();
+                decryptor.Decrypt(encryptedMatrix2[j], testPlain);
+                ckksEncoder.Decode(testPlain, new List<double>());
+            }
 
             stopwatch.Stop();
             sheet = package.Workbook.Worksheets[(int)TableEnum.SumDecryptingTime];
@@ -601,15 +653,29 @@ namespace SEAL_Matrix.Core.Matrix
             stopwatch.Start();
 
             bytesBefore = GC.GetTotalMemory(false);
-            using var sumOfMatrix = new Ciphertext();
-            evaluator.Add(encryptedMatrix1, encryptedMatrix2, sumOfMatrix);
-            bytesAfter = GC.GetTotalMemory(false);
-            evaluator.RelinearizeInplace(sumOfMatrix, relinKeys);
+            var sumOfMatrix = new Ciphertext[cypherCount];
+            for (int j = 0; (ulong) j < cypherCount; j++)
+            {
+                sumOfMatrix[j] = new Ciphertext();
+                evaluator.Add(encryptedMatrix1[j], encryptedMatrix2[j], sumOfMatrix[j]);
+            }
 
-            using var plainResult = new Plaintext();
-            decryptor.Decrypt(sumOfMatrix, plainResult);
+            bytesAfter = GC.GetTotalMemory(false);
+            //evaluator.RelinearizeInplace(sumOfMatrix, relinKeys);
+
+            var plainResult = new Plaintext[cypherCount];
             var result = new List<double>();
-            ckksEncoder.Decode(plainResult, result);
+            for (int j = 0; (ulong) j < cypherCount; j++)
+            {
+                plainResult[j] = new Plaintext();
+                decryptor.Decrypt(sumOfMatrix[j], plainResult[j]);
+                var temp = new List<double>();
+                ckksEncoder.Decode(plainResult[j], temp);
+                result.AddRange(temp);
+            }
+
+            
+           
 
             var resultMatrix = new Matrix()
             {

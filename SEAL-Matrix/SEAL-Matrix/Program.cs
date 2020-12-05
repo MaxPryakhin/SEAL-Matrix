@@ -63,10 +63,18 @@ namespace SEAL_Matrix
                 {
                     workSheet.Cells[1, 1].Value = "c_id";
                     workSheet.Cells[1, 2].Value = "100x100";
-                    //workSheet.Cells[1, 3].Value = "200x200";
+                    workSheet.Cells[1, 3].Value = "200x200";
+                    workSheet.Cells[1, 4].Value = "300x200";
+                    workSheet.Cells[1, 5].Value = "400x400";
+                    workSheet.Cells[1, 6].Value = "500x500";
+                    workSheet.Cells[1, 7].Value = "600x600";
+                    workSheet.Cells[1, 8].Value = "700x700";
+                    workSheet.Cells[1, 9].Value = "800x800";
+                    workSheet.Cells[1, 10].Value = "900x900";
                 }
             }
 
+            //package.Save();
 
 
             var startRow = 1;
@@ -83,8 +91,9 @@ namespace SEAL_Matrix
             
             var random = new Random();
 
-            for (var i = 1; i < 2; i++)
+            for (var i = 1; i < 10; i++)
             {
+                Console.WriteLine($"{i}00x{i}00...");
                 var size = 100 * i;
                 var column = 1 + i;
                 var bytesBefore = GC.GetTotalMemory(false);
@@ -103,18 +112,20 @@ namespace SEAL_Matrix
                 sheet = package.Workbook.Worksheets[(int)TableEnum.SumResultError];
                 sheet.Cells[row, column].Value = maxError;
 
-                clearResult = matrixContext.MultiplyMatrix(firstMatrix, secondMatrix, package, row, column);
-                decryptedResult = matrixHomomorphicContext.MultiplyMatrix(firstMatrix, secondMatrix, package, row, column);
-                maxError = FindMaxAbsoluteError(clearResult, decryptedResult);
-                sheet = package.Workbook.Worksheets[(int)TableEnum.SumResultError];
-                sheet.Cells[row, column].Value = maxError;
-
                 var number = random.NextDouble();
                 clearResult = matrixContext.MultiplyMatrixByNumber(firstMatrix, number, package, row, column);
                 decryptedResult = matrixHomomorphicContext.MultiplyMatrixByNumber(firstMatrix, number, package, row, column);
                 maxError = FindMaxAbsoluteError(clearResult, decryptedResult);
                 sheet = package.Workbook.Worksheets[(int)TableEnum.SumResultError];
                 sheet.Cells[row, column].Value = maxError;
+
+                //clearResult = matrixContext.MultiplyMatrix(firstMatrix, secondMatrix, package, row, column);
+                //decryptedResult = matrixHomomorphicContext.MultiplyMatrix(firstMatrix, secondMatrix, package, row, column);
+                //maxError = FindMaxAbsoluteError(clearResult, decryptedResult);
+                //sheet = package.Workbook.Worksheets[(int)TableEnum.SumResultError];
+                //sheet.Cells[row, column].Value = maxError;
+
+
             }
 
             package.SaveAs(fs);
