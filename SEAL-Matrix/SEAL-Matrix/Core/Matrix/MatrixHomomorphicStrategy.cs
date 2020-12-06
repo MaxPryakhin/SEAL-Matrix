@@ -495,7 +495,7 @@ namespace SEAL_Matrix.Core.Matrix
                 }
             }
 
-            var scale = Math.Pow(2.0, 10);
+            var scale = Math.Pow(2.0, 40);
 
             var plainMatrix = new Plaintext[cypherCount];
             var plainCoeff = new Plaintext();
