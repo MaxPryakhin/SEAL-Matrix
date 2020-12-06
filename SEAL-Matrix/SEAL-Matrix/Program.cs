@@ -20,15 +20,12 @@ namespace SEAL_Matrix
             //test
             //int command = 3;
 
-            var matrixStrategy = new MatrixStrategy();
-            var matrixContext = new MatrixContext(matrixStrategy);
-            var matrixHomomorphicStrategy = new MatrixHomomorphicStrategy();
-            var matrixHomomorphicContext = new MatrixContext(matrixHomomorphicStrategy);
 
-            var isExists = File.Exists("test.xslx");
-            using var fs = File.Open("test.xslx", FileMode.OpenOrCreate);
 
-            var package = new ExcelPackage();
+            var isExists = File.Exists("test.xlsx");
+            using var fs = File.Open("test.xlsx", FileMode.OpenOrCreate);
+
+            var package = new ExcelPackage(fs);
             if (!isExists)
             {
                 package.Workbook.Worksheets.Add("0.Параметры криптосистемы");
@@ -39,7 +36,7 @@ namespace SEAL_Matrix
                 package.Workbook.Worksheets.Add("1.1.Время дешифрования матриц (сумма)");
                 package.Workbook.Worksheets.Add("1.2.Время шифрования матриц (умножение)");
                 package.Workbook.Worksheets.Add("1.2.Объем ОЗУ для хранения зашифрованных  матриц (умножение)");
-                package.Workbook.Worksheets.Add("1.3.Время дешифрования матриц (умножение)");
+                package.Workbook.Worksheets.Add("1.2.Время дешифрования матриц (умножение)");
 
                 package.Workbook.Worksheets.Add("2.Время сложения матриц");
                 package.Workbook.Worksheets.Add("2.Объем ОЗУ для хранения матрицы сложения");
@@ -79,16 +76,27 @@ namespace SEAL_Matrix
 
             var startRow = 1;
             var cells = package.Workbook.Worksheets[0].Cells;
+            var cell = cells[1, 1];
             int row = 1;
 
-            for (var i = 1; i < cells.Rows ; i++)
+            do
             {
-                var cell = cells[startRow + i, 1];
-                if (cell.Value != null) continue;
-                row = startRow + i;
-                break;
+                row += 1;
+                cell = cells[row, 1];
+            } while (cell.Value != null);
+
+
+
+            foreach (var workSheet in package.Workbook.Worksheets)
+            {
+                workSheet.Cells[row, 1].Value = row - 1;
             }
-            
+
+            var matrixStrategy = new MatrixStrategy();
+            var matrixContext = new MatrixContext(matrixStrategy);
+            var matrixHomomorphicStrategy = new MatrixHomomorphicStrategy(package, row);
+            var matrixHomomorphicContext = new MatrixContext(matrixHomomorphicStrategy);
+
             var random = new Random();
 
             for (var i = 1; i < 10; i++)

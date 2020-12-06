@@ -14,17 +14,24 @@ namespace SEAL_Matrix.Core.Matrix
     {
         private EncryptionParameters _parms;
 
-        public MatrixHomomorphicStrategy()
+        public MatrixHomomorphicStrategy(ExcelPackage package, int row)
         {
             var parms = new EncryptionParameters(SchemeType.CKKS);
 
-            const ulong polyModulusDegree = 16384;
+            const ulong polyModulusDegree = 8192;
             //Console.WriteLine($"Max bit count ${CoeffModulus.MaxBitCount(polyModulusDegree)}");
             parms.PolyModulusDegree = polyModulusDegree;
             parms.CoeffModulus = CoeffModulus.Create(
-                polyModulusDegree, new int[] { 60, 40, 40, 40, 40, 60 });
+                polyModulusDegree, new int[] { 60, 40, 40, 60 });
 
             _parms = parms;
+
+            var sheet = package.Workbook.Worksheets[(int)TableEnum.Params];
+            var coeffs = parms.CoeffModulus.ToArray();
+            sheet.Cells[row, 2].Value = coeffs[0].Value;
+            sheet.Cells[row, 3].Value = coeffs[1].Value;
+            sheet.Cells[row, 4].Value = coeffs[2].Value;
+            sheet.Cells[row, 5].Value = coeffs[3].Value;
         }
 
         public Matrix MultiplyMatrix(Matrix a, Matrix b, ExcelPackage package, int row, int column)
@@ -247,7 +254,7 @@ namespace SEAL_Matrix.Core.Matrix
             stopwatch.Stop();
 
             var sheet = package.Workbook.Worksheets[(int)TableEnum.MulEncryptingTime];
-            sheet.Cells[row, column].Value = stopwatch.ElapsedMilliseconds;
+            sheet.Cells[row, column].Value = stopwatch.ElapsedTicks;
 
             sheet = package.Workbook.Worksheets[(int)TableEnum.MulEncryptingRam];
             var bytes = bytesAfter - bytesBefore;
@@ -265,7 +272,7 @@ namespace SEAL_Matrix.Core.Matrix
 
             stopwatch.Stop();
             sheet = package.Workbook.Worksheets[(int)TableEnum.MulDecryptingTime];
-            sheet.Cells[row, column].Value = stopwatch.ElapsedMilliseconds;
+            sheet.Cells[row, column].Value = stopwatch.ElapsedTicks;
 
             stopwatch.Reset();
             stopwatch.Start();
@@ -366,7 +373,7 @@ namespace SEAL_Matrix.Core.Matrix
 
             stopwatch.Stop();
             sheet = package.Workbook.Worksheets[(int) TableEnum.MulEncryptOperationTime];
-            sheet.Cells[row, column].Value = stopwatch.ElapsedMilliseconds;
+            sheet.Cells[row, column].Value = stopwatch.ElapsedTicks;
 
             var resultMatrix = new Matrix()
             {
@@ -542,7 +549,7 @@ namespace SEAL_Matrix.Core.Matrix
 
             stopwatch.Stop();
             var sheet = package.Workbook.Worksheets[(int)TableEnum.MulByNumberEncryptOperationTime];
-            sheet.Cells[row, column].Value = stopwatch.ElapsedMilliseconds;
+            sheet.Cells[row, column].Value = stopwatch.ElapsedTicks;
             sheet = package.Workbook.Worksheets[(int)TableEnum.MulByNumberEncryptResultRam];
             var bytes = bytesAfter - bytesBefore;
             sheet.Cells[row, column].Value = bytes;
@@ -630,7 +637,7 @@ namespace SEAL_Matrix.Core.Matrix
             bytesAfter = GC.GetTotalMemory(false);
             stopwatch.Stop();
             var sheet = package.Workbook.Worksheets[(int)TableEnum.SumEncryptingTime];
-            sheet.Cells[row, column].Value = stopwatch.ElapsedMilliseconds;
+            sheet.Cells[row, column].Value = stopwatch.ElapsedTicks;
             sheet = package.Workbook.Worksheets[(int)TableEnum.SumEncryptingRam];
             var bytes = bytesAfter - bytesBefore;
             sheet.Cells[row, column].Value = bytes;
@@ -647,7 +654,7 @@ namespace SEAL_Matrix.Core.Matrix
 
             stopwatch.Stop();
             sheet = package.Workbook.Worksheets[(int)TableEnum.SumDecryptingTime];
-            sheet.Cells[row, column].Value = stopwatch.ElapsedMilliseconds;
+            sheet.Cells[row, column].Value = stopwatch.ElapsedTicks;
 
             stopwatch.Reset();
             stopwatch.Start();
@@ -685,7 +692,7 @@ namespace SEAL_Matrix.Core.Matrix
 
             stopwatch.Stop();
             sheet = package.Workbook.Worksheets[(int)TableEnum.SumEncryptOperationTime];
-            sheet.Cells[row, column].Value = stopwatch.ElapsedMilliseconds;
+            sheet.Cells[row, column].Value = stopwatch.ElapsedTicks;
             sheet = package.Workbook.Worksheets[(int)TableEnum.SumEncryptResultRam];
             bytes = bytesAfter - bytesBefore;
             sheet.Cells[row, column].Value = bytes;

@@ -54,7 +54,7 @@ namespace SEAL_Matrix.Core.Matrix
             stopwatch.Stop();
 
             var sheet = package.Workbook.Worksheets[(int)TableEnum.MulTime];
-            sheet.Cells[row, column].Value = stopwatch.ElapsedMilliseconds;
+            sheet.Cells[row, column].Value = stopwatch.ElapsedTicks;
 
             sheet = package.Workbook.Worksheets[(int)TableEnum.MulRam];
             var bytes = bytesAfter - bytesBefore;
@@ -79,7 +79,7 @@ namespace SEAL_Matrix.Core.Matrix
             stopwatch.Stop();
 
             var sheet = package.Workbook.Worksheets[(int)TableEnum.MulByNumberTime];
-            sheet.Cells[row, column].Value = stopwatch.ElapsedMilliseconds;
+            sheet.Cells[row, column].Value = stopwatch.ElapsedTicks;
 
             sheet = package.Workbook.Worksheets[(int)TableEnum.MulByNumberRam];
             var bytes = bytesAfter - bytesBefore;
@@ -116,7 +116,7 @@ namespace SEAL_Matrix.Core.Matrix
             stopwatch.Stop();
 
             var sheet = package.Workbook.Worksheets[(int)TableEnum.SumTime];
-            sheet.Cells[row, column].Value = stopwatch.ElapsedMilliseconds;
+            sheet.Cells[row, column].Value = stopwatch.ElapsedTicks;
 
             sheet = package.Workbook.Worksheets[(int)TableEnum.SumRam];
             var bytes = bytesAfter - bytesBefore;

@@ -5,7 +5,7 @@ namespace SEAL_Matrix.Core.Enums
     public enum TableEnum
     {
         [Description("0.Параметры криптосистемы")]
-        Params = 1,
+        Params = 0,
 
         [Description("1.Объем ОЗУ для хранения матриц")]
         Ram,
