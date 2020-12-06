@@ -5,55 +5,55 @@ namespace SEAL_Matrix.Core.Enums
     public enum TableEnum
     {
         [Description("0.Параметры криптосистемы")]
-        Params = 0,
+        Params = 1,
 
         [Description("1.Объем ОЗУ для хранения матриц")]
-        Ram = 1,
+        Ram,
         [Description("1.Время шифрования матриц (сумма)")]
-        SumEncryptingTime = 2,
+        SumEncryptingTime,
         [Description("1.Объем ОЗУ для хранения зашифрованных  матриц (сумма)")]
-        SumEncryptingRam = 3,
+        SumEncryptingRam,
         [Description("1.Время дешифрования матриц (сумма)")]
-        SumDecryptingTime = 4,
+        SumDecryptingTime,
         [Description("1.Время шифрования матриц (умножение)")]
-        MulEncryptingTime = 5,
+        MulEncryptingTime,
         [Description("1.Объем ОЗУ для хранения зашифрованных  матриц (умножение)")]
-        MulEncryptingRam = 6,
+        MulEncryptingRam,
         [Description("1.Время дешифрования матриц (умножение)")]
-        MulDecryptingTime = 7,
+        MulDecryptingTime,
 
         [Description("2.Время сложения матриц")]
-        SumTime = 7,
+        SumTime,
         [Description("2.Объем ОЗУ для хранения матрицы сложения")]
-        SumRam = 8,
+        SumRam,
         [Description("2.Время сложения зашифрованных матриц")]
-        SumEncryptOperationTime = 9,
+        SumEncryptOperationTime,
         [Description("2.Объем ОЗУ для хранения зашифрованной матрицы сложения")]
-        SumEncryptResultRam = 10,
+        SumEncryptResultRam,
         [Description("2.Ошибка результата")]
-        SumResultError = 11,
+        SumResultError,
 
         [Description("3.Время умножения матрицы на число")]
-        MulByNumberTime = 12,
+        MulByNumberTime,
         [Description("3.Объем ОЗУ для хранения матрицы, умноженной на число")]
-        MulByNumberRam = 13,
+        MulByNumberRam,
         [Description("3.Время умноженния зашифрованной матрицы на число")]
-        MulByNumberEncryptOperationTime = 14,
+        MulByNumberEncryptOperationTime,
         [Description("3.Объем ОЗУ для хранения зашифрованной матрицы, умноженной на число")]
-        MulByNumberEncryptResultRam = 15,
+        MulByNumberEncryptResultRam,
         [Description("3.Ошибка результата")]
-        MulByNumberResultError = 16,
+        MulByNumberResultError,
 
         [Description("4.Время умножения матриц")]
-        MulTime = 17,
+        MulTime,
         [Description("4.Объем ОЗУ для хранения матрицы умножения")]
-        MulRam = 18,
+        MulRam,
         [Description("4.Время умножения зашифрованных матриц")]
-        MulEncryptOperationTime = 19,
+        MulEncryptOperationTime,
         [Description("4.Объем ОЗУ для хранения зашифрованной матрицы умножения")]
-        MulEncryptResultRam = 20,
+        MulEncryptResultRam,
         [Description("4.Ошибка результата")]
-        MulResultError = 21,
+        MulResultError,
     }
 }
 

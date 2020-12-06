@@ -116,7 +116,7 @@ namespace SEAL_Matrix
                 clearResult = matrixContext.MultiplyMatrixByNumber(firstMatrix, number, package, row, column);
                 decryptedResult = matrixHomomorphicContext.MultiplyMatrixByNumber(firstMatrix, number, package, row, column);
                 maxError = FindMaxAbsoluteError(clearResult, decryptedResult);
-                sheet = package.Workbook.Worksheets[(int)TableEnum.SumResultError];
+                sheet = package.Workbook.Worksheets[(int)TableEnum.MulByNumberResultError];
                 sheet.Cells[row, column].Value = maxError;
 
                 //clearResult = matrixContext.MultiplyMatrix(firstMatrix, secondMatrix, package, row, column);
