@@ -23,9 +23,9 @@ namespace SEAL_Matrix
 
 
             var isExists = File.Exists("test.xlsx");
-            using var fs = File.Open("test.xlsx", FileMode.OpenOrCreate);
+            var f = new FileInfo("./test.xlsx");
 
-            var package = new ExcelPackage(fs);
+            using var package = new ExcelPackage(f);
             if (!isExists)
             {
                 package.Workbook.Worksheets.Add("0.Параметры криптосистемы");
@@ -136,7 +136,8 @@ namespace SEAL_Matrix
 
             }
 
-            package.SaveAs(fs);
+
+            package.Save();
 
 
             //while (command != 5)
