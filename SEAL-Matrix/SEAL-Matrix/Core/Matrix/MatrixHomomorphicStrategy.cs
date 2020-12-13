@@ -18,20 +18,22 @@ namespace SEAL_Matrix.Core.Matrix
         {
             var parms = new EncryptionParameters(SchemeType.CKKS);
 
-            const ulong polyModulusDegree = 8192;
+            const ulong polyModulusDegree = 16384;
             //Console.WriteLine($"Max bit count ${CoeffModulus.MaxBitCount(polyModulusDegree)}");
             parms.PolyModulusDegree = polyModulusDegree;
             parms.CoeffModulus = CoeffModulus.Create(
-                polyModulusDegree, new int[] { 60, 40, 40, 60 });
+                polyModulusDegree, new int[] { 60, 40, 40, 40, 40, 60 });
 
             _parms = parms;
 
             var sheet = package.Workbook.Worksheets[(int)TableEnum.Params];
             var coeffs = parms.CoeffModulus.ToArray();
-            sheet.Cells[row, 2].Value = coeffs[0].Value;
-            sheet.Cells[row, 3].Value = coeffs[1].Value;
-            sheet.Cells[row, 4].Value = coeffs[2].Value;
-            sheet.Cells[row, 5].Value = coeffs[3].Value;
+
+            for (int i = 0; i < coeffs.Length; i++)
+            {
+                var value = coeffs[i].Value;
+                sheet.Cells[row, 2 + i].Value = value;
+            }
         }
 
         public Matrix MultiplyMatrix(Matrix a, Matrix b, ExcelPackage package, int row, int column)
@@ -190,6 +192,7 @@ namespace SEAL_Matrix.Core.Matrix
             }
 
             var stopwatch = new Stopwatch();
+            stopwatch.Start();
 
             var uSigmaDiagonalsPlain = new Plaintext[square];
             var uTauDiagonalsPlain = new Plaintext[square];
@@ -295,7 +298,7 @@ namespace SEAL_Matrix.Core.Matrix
                 //ConsoleMatrixHelper.PrintMatrix(vkDiagonals[k - 1], length);
                 //Console.WriteLine("matrix WK");
                 //ConsoleMatrixHelper.PrintMatrix(wkDiagonals[k - 1], length);
-
+                Console.WriteLine($"{k} iteration of {length}");
                 ctAResult[k] = LinearTransformPlain(ctAResult[0], vkdIagonalsPlain[k - 1], galKeys);
                 ctBResult[k] = LinearTransformPlain(ctBResult[0], wkdIagonalsPlain[k - 1], galKeys);
             }

@@ -21,7 +21,6 @@ namespace SEAL_Matrix
             //int command = 3;
 
 
-
             var isExists = File.Exists("test.xlsx");
             var f = new FileInfo("./test.xlsx");
 
@@ -74,7 +73,9 @@ namespace SEAL_Matrix
             //package.Save();
 
 
-            var startRow = 1;
+            for (int j = 0; j < 20; j++)
+            { 
+                var startRow = 1;
             var cells = package.Workbook.Worksheets[0].Cells;
             var cell = cells[1, 1];
             int row = 1;
@@ -99,10 +100,13 @@ namespace SEAL_Matrix
 
             var random = new Random();
 
+            Console.WriteLine($"row = {row}");
+
             for (var i = 1; i < 10; i++)
             {
-                Console.WriteLine($"{i}00x{i}00...");
+                
                 var size = 100 * i;
+                Console.WriteLine($"{size}x{size}...");
                 var column = 1 + i;
                 var bytesBefore = GC.GetTotalMemory(false);
                 var firstMatrix = MatrixHelper.GenerateRandomMatrix(size);
@@ -130,16 +134,16 @@ namespace SEAL_Matrix
                 //clearResult = matrixContext.MultiplyMatrix(firstMatrix, secondMatrix, package, row, column);
                 //decryptedResult = matrixHomomorphicContext.MultiplyMatrix(firstMatrix, secondMatrix, package, row, column);
                 //maxError = FindMaxAbsoluteError(clearResult, decryptedResult);
-                //sheet = package.Workbook.Worksheets[(int)TableEnum.SumResultError];
+                //sheet = package.Workbook.Worksheets[(int)TableEnum.MulResultError];
                 //sheet.Cells[row, column].Value = maxError;
 
 
             }
-
+            }
 
             package.Save();
 
-
+            
             //while (command != 5)
             //{
             //    var firstMatrix = InitMatrix();
